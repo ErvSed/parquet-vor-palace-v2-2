@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ведомость паркетных полов — вариант 2.2</title>
+<style>
+  :root{
+    --bg:#f5f6f8; --panel:#fff; --line:#d9dee5; --ink:#1d2733; --mut:#5b6b7c;
+    --acc:#1f4e79; --acc2:#2d6da3; --chip:#eef3f8; --warn:#fff4e5;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--acc);color:#fff;padding:16px 22px}
+  header h1{margin:0;font-size:19px;font-weight:600}
+  header p{margin:6px 0 0;color:#cfe0ef;font-size:13px}
+  .wrap{padding:16px 22px 40px}
+  .tabs{display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+  .tabgroup{display:flex;gap:8px;align-items:center}
+  .tabtag{font-weight:700;color:var(--acc);font-size:13px;letter-spacing:.03em}
+  .tab{padding:8px 14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font-size:13px}
+  .tab.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+  .stat b{display:block;font-size:17px}
+  .stat span{color:var(--mut);font-size:12px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  input[type=search],select{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:13px;min-width:180px}
+  input[type=search]{flex:1 1 280px}
+  .hint{color:var(--mut);font-size:12px;margin:0 0 10px}
+  .layout{display:grid;grid-template-columns:1fr;gap:14px}
+  @media(min-width:1100px){.layout{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .tblwrap{overflow:auto;max-height:74vh}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  th,td{border-bottom:1px solid var(--line);padding:6px 8px;text-align:center;white-space:nowrap}
+  th{position:sticky;top:0;background:#eaf0f6;color:var(--acc);font-weight:600;z-index:2;cursor:pointer}
+  th:hover{background:#dde8f2}
+  td.l,th.l{text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:120px}
+  .tblwrap td{line-height:1.25;padding-top:4px;padding-bottom:4px}
+  .tblwrap td.l{max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  tbody tr{cursor:pointer}
+  tbody tr:hover{background:#f0f6fc}
+  tbody tr.sel{background:#dcebfa}
+tbody tr.tot{background:#fff2cc;font-weight:600}
+tbody tr.tot td{border-top:2px solid var(--acc);position:sticky;bottom:0}
+  .num{font-variant-numeric:tabular-nums}
+  .viewer{position:sticky;top:12px}
+  .vhead{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .vhead b{font-size:14px}
+  .vhead a{color:var(--acc2);font-size:12px}
+  iframe{width:100%;height:66vh;border:0;background:#fff;display:block}
+  .vswitch{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center;background:#f7fafd}
+  .vbtn{padding:6px 12px;border:1px solid var(--line);background:#fff;border-radius:7px;cursor:pointer;font-size:12.5px}
+  .vbtn.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
+  .vbtn.pl{border-color:#cfe0ef}
+  .vbtn[disabled]{opacity:.45;cursor:default}
+  .vlabel{color:var(--mut);font-size:12px;margin-right:4px}
+  .empty{padding:34px 16px;text-align:center;color:var(--mut)}
+  .note{padding:10px 12px;font-size:12.5px;color:var(--mut);border-top:1px solid var(--line);background:#fafcfe}
+  .note b{color:var(--ink)}
+  .fb{background:var(--warn);border-radius:4px;padding:1px 5px}
+  .ask{background:#fdeaea;color:#b3261e;border-radius:4px;padding:1px 6px;font-size:11.5px}
+  footer{padding:14px 22px;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Ведомость паркетных полов — вариант 2.2 (РД 1.1/1.3/1.4)</h1>
+  <p>Воссоздаваемый и восстанавливаемый паркет. Клик по строке открывает вырезку листа: состав слоёв (экспликация) и маркировочный план полов. <a href="materials.html" style="color:#fff">Сводная ведомость материалов →</a></p>
+</header>
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="stats" id="stats"></div>
+  <div class="bar">
+    <input type="search" id="q" placeholder="Поиск: тип пола, помещение, рисунок, материал…">
+    <select id="pat"><option value="">Все рисунки</option></select>
+    <select id="sort">
+      <option value="mark">Сортировка: по типу пола</option>
+      <option value="area">по площади (убыв.)</option>
+      <option value="proj">по тому</option>
+      <option value="room">по помещению</option>
+    </select>
+  </div>
+  <p class="hint" id="hint"></p>
+  <div class="layout">
+    <div class="card">
+      <div class="tblwrap">
+        <table id="tbl">
+          <thead><tr id="th"></tr></thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card viewer" id="vcard">
+      <div class="vhead">
+        <b id="vtitle">Выберите строку в таблице</b>
+        <a id="vopen" href="#" target="_blank" rel="noopener" hidden>открыть в новой вкладке ↗</a>
+        <a id="rdopen" href="#" target="_blank" rel="noopener" hidden>лист РД ↗</a>
+      </div>
+      <div class="vswitch" id="vswitch">
+        <span class="vlabel">Что показать:</span>
+        <button class="vbtn on" id="vCompose" disabled>Состав слоёв (экспликация)</button>
+        <button class="vbtn pl" id="vPlan" disabled>План полов</button>
+        <span id="vPlanPages"></span>
+      </div>
+      <iframe id="vframe" title="Просмотр участка"></iframe>
+      <div class="note" id="vnote">Слева — ведомость. Справа переключайте: «Состав слоёв» — таблица с пирогом и площадью, «План полов» — маркировочный план с номерами помещений и марками полов.</div>
+    </div>
+  </div>
+  <footer id="foot"></footer>
+</div>
+<script>
+const COLS = {
+  full: [
+    ["mark","Тип пола",""],["tom_full","Проект","l"],["sheet","Лист",""],
+    ["rd","РД","l"],["rooms","Помещения","l"],["area","Площадь, м²","num"],
+    ["layers","Состав слоёв","l"],["planinfo","План полов",""]
+  ],
+  fifth: [
+    ["mark","Тип пола",""],["rd","РД","l"],["pages","Стр. документа (план + экспликация)",""],["rooms","Помещения","l"],
+    ["area","Площадь, м²","num"],["pattern","Рисунок","l"],
+    ["fanera","Фанера, мм",""],["dob","Добор В×Ш×шаг, мм",""],["lag","Лага В×Ш×шаг, мм",""],
+    ["kera","Керамзит, мм","num"],["peno","Пеностекло, мм","num"],
+    ["mv1","Минвата 1, мм","num"],["mv2","Минвата 2, мм","num"],["firebio","Огнебиозащита",""],
+    ["planinfo","План полов",""]
+  ]
+};
+let DATA=null, mode="full", rows=[], filtered=[], sortKey="mark", sel=null, view="compose", planPage=0;
+
+const fmt = v => (v===null||v===undefined||v==="") ? "—" : (Array.isArray(v) ? v.map(x=>x===null?"—":x).join(" × ") : v);
+
+function boot(d){
+  DATA = d;
+  document.getElementById("tabs").innerHTML =
+    '<div class="tab on" data-m="full">Все паркетные полы · '+d.full.types+' типов · '+nf(d.full.area)+' м²</div>';
+  document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>setMode(t.dataset.m));
+  document.getElementById("foot").textContent =
+    "Источники: документ «Полы 5 этаж.pdf», новые листы РД 1.1 изм.2 (л. 28–29), РД 1.3 изм.1 (л. 22–23), РД 1.4 изм.1 (л. 13) и тома АР2; "+
+    "рисунок паркета — тома РР.АИ. Учтены только слои выше существующих конструкций, плит перекрытий и стяжек. "+
+    "Прямая ссылка на тип: ?t=1.15&view=plan";
+  const qs=new URLSearchParams(location.search);
+  setMode("full");
+  const t=qs.get("t");
+  if(t){
+    document.getElementById("q").value=t;
+    apply();
+    const idx=filtered.findIndex(r=>String(r.mark)===t);
+    if(idx>=0){
+      show(idx);
+      if(qs.get("view")==="plan") setView("plan");
+    }
+  }
+}
+const nf = n => (n||0).toLocaleString("ru-RU",{maximumFractionDigits:2});
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("on",t.dataset.m===m));
+  rows = DATA[m].rows.slice();
+  const pats=[...new Set(rows.map(r=>r.pattern).filter(Boolean))].sort();
+  const nUn=rows.filter(r=>!r.pattern).length;
+  document.getElementById("pat").innerHTML='<option value="">Все рисунки</option>'+pats.map(p=>'<option>'+p+'</option>').join("")+
+    (nUn?'<option value="__none__">— не определён ('+nUn+')</option>':'');
+  document.getElementById("stats").innerHTML =
+    '<div class="stat"><b>'+nf(DATA[m].area)+'</b><span>м² всего</span></div>'+
+    '<div class="stat"><b>'+DATA[m].types+'</b><span>типов пола</span></div>'+
+    '<div class="stat"><b>'+rows.filter(r=>r.firebio).length+'</b><span>с огнебиозащитой</span></div>';
+  drawHead(); apply();
+}
+
+function drawHead(){
+  document.getElementById("th").innerHTML = COLS[mode].map(c=>'<th class="'+c[2]+'">'+c[1]+'</th>').join("");
+}
+
+function apply(){
+  const q=document.getElementById("q").value.trim().toLowerCase();
+  const p=document.getElementById("pat").value;
+  sortKey=document.getElementById("sort").value;
+  filtered = rows.filter(r=>{
+    if(p==="__none__"){ if(r.pattern) return false; }
+    else if(p && r.pattern!==p) return false;
+    if(!q) return true;
+    const hay=[r.mark,r.tom_full,r.sheet,r.rd,r.rooms.join(" "),r.layers].join(" ").toLowerCase();
+    return hay.includes(q);
+  });
+  filtered.sort((a,b)=>{
+    if(sortKey==="area") return (b.area||0)-(a.area||0);
+    if(sortKey==="proj") return String(a.proj||a.pages||"").localeCompare(String(b.proj||b.pages||"")) || cmpMark(a.mark,b.mark);
+    if(sortKey==="room") return (a.rooms[0]||"").localeCompare(b.rooms[0]||"") ;
+    return cmpMark(a.mark,b.mark);
+  });
+  const tot=filtered.reduce((s,r)=>s+(r.area||0),0);
+  const firebioSum=filtered.filter(r=>r.firebio).reduce((s,r)=>s+(r.area||0),0);
+  document.getElementById("hint").textContent = "Показано "+filtered.length+" из "+rows.length+" типов · сумма "+nf(tot)+" м²"
+    + (tot?(mode==="full"?" · фонд огнебиозащиты "+nf(firebioSum)+" м²":""):"");
+  render();
+}
+function cmpMark(a,b){
+  const pa=String(a).split(/[.\-]/).map(x=>parseInt(x)||0), pb=String(b).split(/[.\-]/).map(x=>parseInt(x)||0);
+  for(let i=0;i<Math.max(pa.length,pb.length);i++){ const d=(pa[i]||0)-(pb[i]||0); if(d) return d; }
+  return String(a).localeCompare(String(b));
+}
+
+function render(){
+  const tb=document.getElementById("tb");
+  if(!filtered.length){ tb.innerHTML='<tr><td class="empty" colspan="'+COLS[mode].length+'">Ничего не найдено</td></tr>'; return; }
+  tb.innerHTML = filtered.map((r,i)=>{
+    const tds = COLS[mode].map(c=>{
+      let v=r[c[0]];
+      if(c[0]==="rooms") v=(r.rooms||[]).join(", ");
+      if(c[0]==="layers" && v) v=String(v).length>85 ? String(v).slice(0,85)+"…" : String(v);
+      if(c[0]==="pages") v=(r.pages||[r.page]).join(", ");
+      if(c[0]==="firebio") v = r.firebio ? '<span class="fb">да'+(r.area?' · '+nf(r.area)+' м²':'')+'</span>' : "—";
+      else if(c[0]==="pattern" && !r.pattern) v = '<span class="ask">уточнить</span>';
+      else if(c[0]==="planinfo") v = (r.plan&&r.plan.length) ? "план + состав" : "только состав";
+      else v = fmt(v);
+      return '<td class="'+c[2]+'">'+v+'</td>';
+    }).join("");
+    return '<tr data-i="'+i+'"'+(sel===i?' class="sel"':'')+'>'+tds+'</tr>';
+  }).join("") + totalRow();
+  tb.querySelectorAll("tr[data-i]").forEach(tr=>tr.onclick=()=>show(+tr.dataset.i));
+}
+
+function totalRow(){
+  const tot=filtered.reduce((s,r)=>s+(r.area||0),0);
+  const fbTot=filtered.filter(r=>r.firebio).reduce((s,r)=>s+(r.area||0),0);
+  const cols=COLS[mode];
+  const iArea=cols.findIndex(c=>c[0]==="area");
+  const iFb=cols.findIndex(c=>c[0]==="firebio");
+  const tds=cols.map((c,i)=>{
+    if(i===0) return '<td class="l">ИТОГО по '+filtered.length+' типам</td>';
+    if(i===iArea) return '<td class="num">'+nf(tot)+'</td>';
+    if(i===iFb) return '<td class="num">'+(fbTot?nf(fbTot)+" м²":"—")+'</td>';
+    return '<td></td>';
+  }).join("");
+  return '<tr class="tot">'+tds+'</tr>';
+}
+
+function setView(v){
+  const r=filtered[sel]; if(!r) return;
+  view = (v==="plan" && (r.plan||[]).length) ? "plan" : "compose";
+  planPage = 0;
+  paint();
+}
+
+function paint(){
+  const r=filtered[sel]; if(!r) return;
+  const pl=r.plan||[];
+  const hasPlan=pl.length>0;
+  if(view==="plan" && !hasPlan) view="compose";
+  document.getElementById("vCompose").classList.toggle("on",view==="compose");
+  document.getElementById("vPlan").classList.toggle("on",view==="plan");
+  document.getElementById("vCompose").disabled=false;
+  document.getElementById("vPlan").disabled=!hasPlan;
+  const src = (view==="plan") ? pl[Math.min(planPage, pl.length-1)] : r.pdf;
+  const a=document.getElementById("vopen"); a.href=src; a.hidden=false;
+  const rd=document.getElementById("rdopen");
+  if(r.rdpdf){ rd.href=r.rdpdf; rd.hidden=false; rd.textContent=(r.rd||"РД")+" ↗"; } else { rd.hidden=true; }
+  document.getElementById("vframe").src=src+"#view=FitH";
+  document.getElementById("vPlanPages").innerHTML = hasPlan
+    ? '<span class="vlabel">лист:</span>'+pl.map((u,i)=>'<button class="vbtn'+
+        (view==="plan"&&i===planPage?' on':'')+'" data-p="'+i+'">'+
+        ((r.plansheets&&r.plansheets[i])||i+1)+'</button>').join("")
+    : '<span class="vlabel">маркировочный план по этому типу в документе не выделен</span>';
+  document.querySelectorAll("#vPlanPages .vbtn").forEach(b=>b.onclick=()=>{
+    planPage=+b.dataset.p; view="plan"; paint();
+  });
+  const bits=[];
+  bits.push("<b>Состав слоёв:</b> "+(r.layers||"—"));
+  if(r.planka) bits.push("<b>Плашки/щиты:</b> "+r.planka);
+  if(r.note) bits.push("<b>Примечание:</b> "+r.note);
+  if(hasPlan) bits.push("<i>Кнопка «План полов» показывает маркировочный план: номера помещений и марки полов на плане.</i>");
+  document.getElementById("vnote").innerHTML = bits.join("<br>");
+}
+
+function show(i){
+  sel=i; const r=filtered[i]; if(!r) return;
+  document.querySelectorAll("#tb tr").forEach(tr=>tr.classList.toggle("sel",+tr.dataset.i===i));
+  document.getElementById("vtitle").textContent = "Тип "+r.mark+" · "+(r.rooms.join(", ")||"—")+" · "+(r.area?nf(r.area)+" м²":"—")+(r.tom_full?("   ·   "+r.tom_full+(r.sheet?(", лист "+r.sheet):"")):"");
+  view="compose"; planPage=0; paint();
+}
+
+document.getElementById("vCompose").onclick=()=>setView("compose");
+document.getElementById("vPlan").onclick=()=>setView("plan");
+
+document.getElementById("q").addEventListener("input",apply);
+document.getElementById("pat").addEventListener("change",apply);
+document.getElementById("sort").addEventListener("change",apply);
+
+fetch("data.json").then(r=>r.json()).then(boot).catch(e=>{
+  document.getElementById("hint").textContent="Не удалось загрузить data.json: "+e;
+});
+</script>
+</body>
+</html>
