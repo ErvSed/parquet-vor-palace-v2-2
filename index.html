@@ -100,7 +100,8 @@ tbody tr.tot td{border-top:2px solid var(--acc);position:sticky;bottom:0}
 
   .vhead a{color:var(--acc2);font-size:12px}
 
-  iframe{width:100%;height:66vh;border:0;background:#fff;display:block}
+  .vwrap{max-height:74vh;overflow:auto;background:#fff}
+  .vwrap canvas{display:block;width:100%;height:auto}
 
   .vswitch{display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap;align-items:center;background:#f7fafd}
 
@@ -210,7 +211,7 @@ tbody tr.tot td{border-top:2px solid var(--acc);position:sticky;bottom:0}
 
       </div>
 
-      <iframe id="vframe" title="Просмотр участка"></iframe>
+      <div class="vwrap" id="vwrap"><canvas id="vcanvas"></canvas></div>
 
       <div class="note" id="vnote">Слева — ведомость. Справа переключайте: «Состав слоёв» — таблица с пирогом и площадью, «План полов» — маркировочный план с номерами помещений и марками полов.</div>
 
@@ -222,6 +223,7 @@ tbody tr.tot td{border-top:2px solid var(--acc);position:sticky;bottom:0}
 
 </div>
 
+<script src="vendor/pdf.min.js"></script>
 <script>
 
 const COLS = {
@@ -516,7 +518,7 @@ function paint(){
 
   if(r.rdpdf){ rd.href=r.rdpdf; rd.hidden=false; rd.textContent=(r.rd||"РД")+" ↗"; } else { rd.hidden=true; }
 
-  document.getElementById("vframe").src=src+"#view=FitH";
+  renderPdf(src);
 
   document.getElementById("vPlanPages").innerHTML = hasPlan
 
@@ -583,6 +585,29 @@ fetch("data.json").then(r=>r.json()).then(boot).catch(e=>{
   document.getElementById("hint").textContent="Не удалось загрузить data.json: "+e;
 
 });
+
+
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdf.worker.min.js";}
+let pdfRenderToken=0;
+async function renderPdf(url){
+  const canvas=document.getElementById("vcanvas")||document.getElementById("pcanvas");
+  if(!canvas) return;
+  const token=++pdfRenderToken;
+  try{
+    const doc=await pdfjsLib.getDocument(url).promise;
+    const page=await doc.getPage(1);
+    const wrap=canvas.parentElement;
+    const maxW=(wrap.clientWidth||900)-2;
+    const vp0=page.getViewport({scale:1});
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const scale=(maxW/vp0.width)*dpr;
+    const vp=page.getViewport({scale});
+    if(token!==pdfRenderToken) return;
+    canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
+    canvas.style.width="100%"; canvas.style.height="auto";
+    await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+  }catch(e){ console.warn("PDF render failed",url,e); }
+}
 
 </script>
 

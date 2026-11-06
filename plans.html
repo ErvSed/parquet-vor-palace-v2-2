@@ -17,7 +17,8 @@
   .tab{padding:8px 14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font-size:13px}
   .tab.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-  iframe{width:100%;height:82vh;border:0;background:#fff;display:block}
+  .pwrap{max-height:82vh;overflow:auto;background:#fff}
+  .pwrap canvas{display:block;width:100%;height:auto}
   .hint{color:var(--mut);font-size:12px;margin:10px 0 0}
   footer{padding:14px 22px;color:var(--mut);font-size:12px}
 </style>
@@ -29,10 +30,11 @@
 </header>
 <div class="wrap">
   <div class="tabs" id="tabs"></div>
-  <div class="card"><iframe id="f" title="План полов этажа"></iframe></div>
+  <div class="card"><div class="pwrap" id="pwrap"><canvas id="pcanvas"></canvas></div></div>
   <p class="hint">Выберите этаж. На плане — номера помещений и марки типов полов; масштаб 1:200.</p>
 </div>
 <footer>Источник: «Полы.pdf», проект От Андрея Ильина. Планы приведены без изменений.</footer>
+<script src="vendor/pdf.min.js"></script>
 <script>
 const floors=[1,2,3,4,5];
 const tabs=document.getElementById('tabs');
@@ -45,9 +47,32 @@ floors.forEach(f=>{
 });
 function show(f){
   document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',floors[i]===f));
-  document.getElementById('f').src='mini/plans/floor-'+f+'.pdf#view=FitH';
+  renderPdf('mini/plans/floor-'+f+'.pdf');
 }
 show(1);
+
+if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdf.worker.min.js";}
+let pdfRenderToken=0;
+async function renderPdf(url){
+  const canvas=document.getElementById("vcanvas")||document.getElementById("pcanvas");
+  if(!canvas) return;
+  const token=++pdfRenderToken;
+  try{
+    const doc=await pdfjsLib.getDocument(url).promise;
+    const page=await doc.getPage(1);
+    const wrap=canvas.parentElement;
+    const maxW=(wrap.clientWidth||900)-2;
+    const vp0=page.getViewport({scale:1});
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const scale=(maxW/vp0.width)*dpr;
+    const vp=page.getViewport({scale});
+    if(token!==pdfRenderToken) return;
+    canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
+    canvas.style.width="100%"; canvas.style.height="auto";
+    await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+  }catch(e){ console.warn("PDF render failed",url,e); }
+}
+
 </script>
 </body>
 </html>
