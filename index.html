@@ -127,6 +127,11 @@ tbody tr.tot td{border-top:2px solid var(--acc);position:sticky;bottom:0}
 
   footer{padding:14px 22px;color:var(--mut);font-size:12px}
 
+
+  .zoom{display:flex;gap:4px;align-items:center;margin-left:auto}
+  .zoom button{border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:13px;padding:4px 9px;color:var(--acc2)}
+  .zoom button:hover{background:#eef4fa}
+  .vwrap canvas,.pwrap canvas{image-rendering:auto}
 </style>
 
 </head>
@@ -197,7 +202,7 @@ tbody tr.tot td{border-top:2px solid var(--acc);position:sticky;bottom:0}
 
         <a id="rdopen" href="#" target="_blank" rel="noopener" hidden>лист РД ↗</a>
 
-      </div>
+      <div class="zoom" id="zoom"><button id="zout" type="button" title="Уменьшить">−</button><button id="zfit" type="button">по ширине</button><button id="zin" type="button" title="Увеличить">+</button></div></div>
 
       <div class="vswitch" id="vswitch">
 
@@ -588,7 +593,13 @@ fetch("data.json").then(r=>r.json()).then(boot).catch(e=>{
 
 
 if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdf.worker.min.js";}
-let pdfRenderToken=0;
+
+let pdfRenderToken=0, pdfZoom=1;
+function setZoom(z){
+  pdfZoom=Math.min(4,Math.max(1,z));
+  const c=document.getElementById("vcanvas")||document.getElementById("pcanvas");
+  if(c){ c.style.width=(pdfZoom*100)+"%"; c.style.height="auto"; }
+}
 async function renderPdf(url){
   const canvas=document.getElementById("vcanvas")||document.getElementById("pcanvas");
   if(!canvas) return;
@@ -597,18 +608,29 @@ async function renderPdf(url){
     const doc=await pdfjsLib.getDocument(url).promise;
     const page=await doc.getPage(1);
     const wrap=canvas.parentElement;
-    const maxW=(wrap.clientWidth||900)-2;
+    const maxW=Math.max(320,wrap.clientWidth||900);
     const vp0=page.getViewport({scale:1});
-    const dpr=Math.min(window.devicePixelRatio||1,2);
-    const scale=(maxW/vp0.width)*dpr;
+    // высокое разрешение: минимум 2400 px по ширине, но не более 12 МП
+    let targetW=Math.max(2400, maxW*2);
+    let scale=targetW/vp0.width;
+    const maxPix=12e6;
+    if(vp0.width*scale*vp0.height*scale>maxPix) scale=Math.sqrt(maxPix/(vp0.width*vp0.height));
     const vp=page.getViewport({scale});
     if(token!==pdfRenderToken) return;
     canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
-    canvas.style.width="100%"; canvas.style.height="auto";
+    setZoom(1);
     await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
   }catch(e){ console.warn("PDF render failed",url,e); }
 }
+function initZoom(){
+  const zin=document.getElementById("zin"), zout=document.getElementById("zout"), zfit=document.getElementById("zfit");
+  if(zin) zin.onclick=()=>setZoom(pdfZoom*1.25);
+  if(zout) zout.onclick=()=>setZoom(pdfZoom/1.25);
+  if(zfit) zfit.onclick=()=>setZoom(1);
+}
 
+
+initZoom();
 </script>
 
 </body>
