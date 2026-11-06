@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Общие планы полов 1–5 этажей — «Полы.pdf»</title>
+<style>
+  :root{--bg:#f5f6f8;--panel:#fff;--line:#d9dee5;--ink:#1d2733;--mut:#5b6b7c;--acc:#1f4e79;--acc2:#2d6da3}
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  header{background:var(--acc);color:#fff;padding:16px 22px}
+  header h1{margin:0;font-size:19px;font-weight:600}
+  header p{margin:6px 0 0;color:#cfe0ef;font-size:13px}
+  header a{color:#fff}
+  .wrap{padding:16px 22px 40px}
+  .tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+  .tab{padding:8px 14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font-size:13px}
+  .tab.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  iframe{width:100%;height:82vh;border:0;background:#fff;display:block}
+  .hint{color:var(--mut);font-size:12px;margin:10px 0 0}
+  footer{padding:14px 22px;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Общие планы полов — 1–5 этажи</h1>
+  <p>Проект «Полы.pdf» (От Андрея Ильина) · маркировочные планы полов по этажам · <a href="index.html">← к ведомости</a></p>
+</header>
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="card"><iframe id="f" title="План полов этажа"></iframe></div>
+  <p class="hint">Выберите этаж. На плане — номера помещений и марки типов полов; масштаб 1:200.</p>
+</div>
+<footer>Источник: «Полы.pdf», проект От Андрея Ильина. Планы приведены без изменений.</footer>
+<script>
+const floors=[1,2,3,4,5];
+const tabs=document.getElementById('tabs');
+floors.forEach(f=>{
+  const b=document.createElement('button');
+  b.className='tab'+(f===1?' on':'');
+  b.textContent=f+' этаж';
+  b.onclick=()=>show(f);
+  tabs.appendChild(b);
+});
+function show(f){
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('on',floors[i]===f));
+  document.getElementById('f').src='mini/plans/floor-'+f+'.pdf#view=FitH';
+}
+show(1);
+</script>
+</body>
+</html>
