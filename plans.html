@@ -1,1071 +1,1071 @@
-<!DOCTYPE html>
-
-<html lang="ru">
-
-<head>
-
-<meta charset="utf-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
-
-<title>Общие планы полов 1–5 этажей — поиск, штриховка, редактирование</title>
-
-<style>
-
-  :root{--bg:#f5f6f8;--panel:#fff;--line:#d9dee5;--ink:#1d2733;--mut:#5b6b7c;--acc:#1f4e79;--acc2:#2d6da3}
-
-  *{box-sizing:border-box}
-
-  body{margin:0;font:14px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
-
-  header{background:var(--acc);color:#fff;padding:16px 22px}
-
-  header h1{margin:0;font-size:19px;font-weight:600}
-
-  header p{margin:6px 0 0;color:#cfe0ef;font-size:13px}
-
-  header a{color:#fff}
-
-  .wrap{padding:14px 18px 40px}
-
-  .sbar{display:flex;gap:8px;margin-bottom:10px}
-
-  .sbar input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff}
-
-  .sbar input:focus{outline:2px solid #bcd7ee;border-color:var(--acc2)}
-
-  .sbar button{padding:0 14px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-size:16px;color:var(--mut)}
-
-  .sres{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;max-height:300px;overflow:auto}
-
-  .sres[hidden]{display:none}
-
-  .sitem{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}
-
-  .sitem:last-child{border-bottom:0}
-
-  .sitem:hover{background:#eef5fc}
-
-  .sfl{flex:0 0 auto;font-size:11px;background:var(--acc2);color:#fff;border-radius:5px;padding:1px 6px}
-
-  .sname{font-weight:600}
-
-  .ssub{color:var(--mut);font-size:12px;margin-left:auto;text-align:right}
-
-  .sempty{padding:12px;color:var(--mut);font-size:13px}
-
-
-
-  .tools{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
-
-  .tools h3{margin:0 0 8px;font-size:13px;color:var(--acc);font-weight:600}
-
-  .legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-
-  .chip{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12.5px}
-
-  .chip.on{border-color:var(--acc);box-shadow:0 0 0 2px #bcd7ee inset}
-
-  .sw{width:22px;height:14px;border:1px solid rgba(0,0,0,.25);border-radius:3px;flex:0 0 auto}
-
-  .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-
-  .acts button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12.5px;color:var(--ink)}
-
-  .acts button:hover{background:#eef5fc}
-
-  .acts button:disabled{opacity:.45;cursor:default}
-
-  .acts .danger{color:#a03030}
-
-  .srv{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap}
-
-  .srv.ok{color:#1e7a3c}
-
-  .srv.err{color:#b03030}
-
-  .thint{color:var(--mut);font-size:12px;margin-top:8px}
-
-
-
-  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
-
-  .tab{padding:8px 14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font-size:13px}
-
-  .tab.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
-
-  .zoom{display:flex;gap:4px;align-items:center;margin-left:auto}
-
-  .zoom button{border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:13px;padding:4px 9px;color:var(--acc2)}
-
-  .zoom button:hover{background:#eef4fa}
-
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
-
-  .pwrap{max-height:74vh;overflow:auto;background:#fff}
-
-  .pstage{position:relative;line-height:0;width:100%}
-
-  #pcanvas{display:block;width:100%;height:auto}
-
-  #poverlay{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
-
-  .hint{color:var(--mut);font-size:12px;margin:8px 0 0}
-
-  footer{padding:12px 18px;color:var(--mut);font-size:11.5px}
-
-#editBtn.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
-#editPanel[hidden]{display:none}
-#editPanel{margin-top:10px}
-</style>
-
-</head>
-
-<body>
-
-<header>
-
-  <h1>Общие планы полов — 1–5 этажи</h1>
-
-  <p>Проект «Полы.pdf» (От Андрея Ильина) · поиск, штриховка и редактирование · <a href="index.html">← к ведомости</a></p>
-
-</header>
-
-<div class="wrap">
-
-  <div class="sbar">
-
-    <input id="q" type="search" placeholder="Поиск по планам: номер помещения (537), название (Гостиная, Буфет)…" autocomplete="off">
-
-    <button id="qclear" type="button" title="Очистить">×</button>
-
-  </div>
-
-  <div class="sres" id="sres" hidden></div>
-
-
-
-  <div class="tools">
-    <div class="acts">
-      <button id="editBtn" type="button">✎ Редактировать</button>
-      <button id="refresh" type="button" title="Обновить с сервера">Обновить</button>
-      <span class="srv" id="srv">синхронизация…</span>
-    </div>
-    <div id="editPanel" hidden>
-      <h3>Примечание — виды работ (нажмите, чтобы выбрать цвет штриховки)</h3>
-      <div class="legend" id="legend"></div>
-      <div class="acts">
-        <button id="finish" type="button" disabled>Завершить область</button>
-        <button id="undoPoint" type="button" disabled>Убрать точку</button>
-        <button id="deleteSel" type="button" disabled>Удалить область</button>
-        <button id="clear" type="button" class="danger">Очистить этаж</button>
-        <button id="save" type="button">Скачать PNG</button>
-      </div>
-      <div class="thint" id="thint">Выберите вид работ и обведите помещение: клики по углам, «Завершить область». Чтобы изменить готовую область — нажмите на неё: её можно перетащить, потянуть за вершины, сменить вид работ или удалить.</div>
-    </div>
-    <div class="thint" id="viewHint">Просмотр: разметка видна всем. Чтобы менять штриховку, нажмите «Редактировать».</div>
-  </div>
-
-  <div class="tabs" id="floors">
-
-    <button class="tab" data-f="1" type="button">1 этаж</button>
-
-    <button class="tab" data-f="2" type="button">2 этаж</button>
-
-    <button class="tab" data-f="3" type="button">3 этаж</button>
-
-    <button class="tab" data-f="4" type="button">4 этаж</button>
-
-    <button class="tab on" data-f="5" type="button">5 этаж</button>
-
-    <div class="zoom">
-
-      <button id="pzout" type="button" title="Уменьшить">−</button>
-
-      <button id="pzfit" type="button">по ширине</button>
-
-      <button id="pzin" type="button" title="Увеличить">+</button>
-
-    </div>
-
-  </div>
-
-
-
-  <div class="card"><div class="pwrap" id="pwrap"><div class="pstage" id="pstage"><canvas id="pcanvas"></canvas><canvas id="poverlay"></canvas></div></div></div>
-
-  <p class="hint">Разметка хранится на сервере и доступна с других устройств. Найденное поиском помещение обводится красным.</p>
-
-</div>
-
-<footer>Источник планов: «Полы.pdf» (проект От Андрея Ильина). Поиск: справочник помещений РД 1.1/1.3/1.4.</footer>
-
-
-
-<script src="vendor/pdf.min.js"></script>
-
-<script>
-
-const WORK_TYPES = [
-
-  {id:"antisept", label:"Антисептирование", color:"#8e44ad"},
-
-  {id:"logs",     label:"Устройство лаг",   color:"#d35400"},
-
-  {id:"ply1",     label:"Фанера, 1-й слой", color:"#2980b9"},
-
-  {id:"ply2",     label:"Фанера, 2-й слой", color:"#16a085"},
-
-  {id:"parquet",  label:"Укладка паркета",  color:"#c0392b"},
-
-  {id:"sanding",  label:"Шлифовка",         color:"#f39c12"},
-
-  {id:"varnish",  label:"Лакировка",        color:"#27ae60"},
-
-  {id:"skirting", label:"Устройство плинтусов", color:"#7f8c8d"}
-
-];
-
-const SERVER = "https://kvdb.io/YWo4XUH1PZw315FFv1HS7q/parquet_hatches_v1";
-
-const LS_KEY = "parquet_plan_hatches_v2";
-
-
-
-let IDX=null, ROOMS=[];
-
-let floor=5, zoomP=1, token=0;
-
-let HL=null;
-
-let hatches=[];
-
-let selectedType=WORK_TYPES[0].id;
-
-let selectedId=null;
-
-let pts=[], cursor=null;
-
-let drag=null, down=null, moved=false;
-
-let lastServerTs=0, saveTimer=null, pollTimer=null;
-
-let patternCache={};
-let editing=false;
-
-const $ = id=>document.getElementById(id);
-
-
-
-function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
-
-function colorOf(id){ const t=WORK_TYPES.find(x=>x.id===id); return t?t.color:"#555"; }
-
-function uid(){ return "h"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
-
-
-
-/* ---------- сервер ---------- */
-
-function setStatus(text, cls){ const el=$("srv"); el.textContent=text; el.className="srv"+(cls?" "+cls:""); }
-
-async function fetchRetry(url, opts, tries){
-
-  tries = tries || 3;
-
-  let last;
-
-  for(let i=0;i<tries;i++){
-
-    try{ return await fetch(url, opts); }
-
-    catch(e){ last=e; await new Promise(r=>setTimeout(r,500*(i+1))); }
-
-  }
-
-  throw last;
-
-}
-
-async function serverLoad(){
-
-  try{
-
-    const r = await fetchRetry(SERVER, {cache:"no-store"}, 3);
-
-    if (r.status===404) return {updatedAt:0, hatches:[]};
-
-    if (!r.ok) throw new Error("HTTP "+r.status);
-
-    const t = await r.text();
-
-    if (!t) return {updatedAt:0, hatches:[]};
-
-    const j = JSON.parse(t);
-
-    return {updatedAt: j.updatedAt||0, hatches: Array.isArray(j.hatches)?j.hatches:[]};
-
-  }catch(e){ console.warn("server load failed", e); return null; }
-
-}
-
-async function serverSave(){
-
-  const ts = Date.now(); lastServerTs = ts;
-
-  const body = JSON.stringify({updatedAt:ts, hatches:hatches});
-
-  try{
-
-    const r = await fetchRetry(SERVER, {method:"PUT", headers:{"Content-Type":"application/json"}, body:body}, 3);
-
-    if (!r.ok) throw new Error("HTTP "+r.status);
-
-    setStatus("сохранено на сервере", "ok");
-
-    try{ localStorage.setItem(LS_KEY, body); }catch(e){}
-
-  }catch(e){
-
-    console.warn("server save failed", e);
-
-    setStatus("сервер недоступен — сохранено локально", "err");
-
-    try{ localStorage.setItem(LS_KEY, body); }catch(e2){}
-
-  }
-
-}
-
-function saveSoon(){
-
-  setStatus("сохранение…");
-
-  clearTimeout(saveTimer);
-
-  saveTimer = setTimeout(serverSave, 500);
-
-}
-
-async function pollServer(){
-
-  if (document.hidden || drag || pts.length) return;
-
-  const srv = await serverLoad();
-
-  if (!srv) return;
-
-  if ((srv.updatedAt||0) > lastServerTs){
-
-    lastServerTs = srv.updatedAt;
-
-    hatches = srv.hatches;
-
-    selectedId = null;
-
-    drawOverlay();
-
-    setStatus("обновлено с другого устройства", "ok");
-
-  }
-
-}
-
-
-
-/* ---------- отрисовка ---------- */
-
-function makePattern(ctx,color){
-
-  if (patternCache[color]) return patternCache[color];
-
-  const c=document.createElement("canvas"); c.width=14; c.height=14;
-
-  const g=c.getContext("2d");
-
-  g.strokeStyle=color; g.lineWidth=2.4; g.lineCap="square";
-
-  g.beginPath();
-
-  g.moveTo(-3,14); g.lineTo(14,-3);
-
-  g.moveTo(4,17); g.lineTo(17,4);
-
-  g.moveTo(-10,7); g.lineTo(7,-10);
-
-  g.stroke();
-
-  const p=ctx.createPattern(c,"repeat"); patternCache[color]=p; return p;
-
-}
-
-function syncOverlay(){
-
-  const c=$("pcanvas"), o=$("poverlay");
-
-  if (c.width && o.width!==c.width){ o.width=c.width; o.height=c.height; }
-
-}
-
-function drawPoly(ctx, points, type, selected, preview){
-
-  if (!points.length) return;
-
-  ctx.save();
-
-  ctx.beginPath();
-
-  points.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
-
-  if (points.length>2) ctx.closePath();
-
-  if (points.length>2){
-
-    ctx.globalAlpha = preview?0.25:0.55;
-
-    ctx.fillStyle = makePattern(ctx,colorOf(type));
-
-    ctx.fill();
-
-  }
-
-  ctx.globalAlpha=1;
-
-  ctx.lineWidth = selected?2.2:1.8;
-
-  ctx.setLineDash(selected?[10,6]:[]);
-
-  ctx.strokeStyle = selected?"#111":colorOf(type);
-
-  ctx.stroke();
-
-  ctx.setLineDash([]);
-
-  if (selected){
-
-    ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=1.4;
-
-    points.forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],4,0,Math.PI*2); ctx.fill(); ctx.stroke(); });
-
-  }
-
-  if (preview){
-
-    ctx.fillStyle=colorOf(type);
-
-    points.forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],3,0,Math.PI*2); ctx.fill(); });
-
-  }
-
-  ctx.restore();
-
-}
-
-function drawOverlay(){
-
-  const o=$("poverlay");
-
-  if (!IDX || !o.width) return;
-
-  const fl=IDX.floors.find(f=>f.floor===floor);
-
-  if (!fl) return;
-
-  const ctx=o.getContext("2d");
-
-  ctx.clearRect(0,0,o.width,o.height);
-
-  const sc=o.width/fl.w;
-
-  ctx.save(); ctx.scale(sc,sc);
-
-  hatches.filter(h=>h.floor===floor).forEach(h=>drawPoly(ctx,h.pts,h.type,h.id===selectedId,false));
-
-  if (pts.length){
-
-    const preview = cursor ? pts.concat([[cursor[0],cursor[1]]]) : pts.slice();
-
-    drawPoly(ctx,preview,selectedType,false,true);
-
-  }
-
-  ctx.restore();
-
-}
-
-function drawSearchHighlight(){
-
-  if (!HL || !IDX) return;
-
-  const o=$("poverlay"), c=$("pcanvas");
-
-  const fl=IDX.floors.find(f=>f.floor===floor);
-
-  if (!fl || !o.width) return;
-
-  const ctx=o.getContext("2d"); const sc=o.width/fl.w;
-
-  const x=HL.x*sc,y=HL.y*sc,w=Math.max(HL.w*sc,sc*8),h=Math.max(HL.h*sc,sc*8);
-
-  ctx.save();
-
-  ctx.fillStyle="rgba(255,214,64,.35)"; ctx.strokeStyle="#e53935"; ctx.lineWidth=Math.max(3,sc*1.2);
-
-  ctx.fillRect(x,y,w,h); ctx.strokeRect(x,y,w,h);
-
-  ctx.restore();
-
-  const wrap=c.parentElement;
-
-  const cssX=x*(c.clientWidth/c.width), cssY=y*(c.clientHeight/c.height);
-
-  wrap.scrollTo({left:Math.max(0,cssX-wrap.clientWidth/2), top:Math.max(0,cssY-wrap.clientHeight/2), behavior:"smooth"});
-
-}
-
-
-
-/* ---------- геометрия ---------- */
-
-function pointInPoly(p, poly){
-
-  let inside=false;
-
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-
-    const xi=poly[i][0], yi=poly[i][1], xj=poly[j][0], yj=poly[j][1];
-
-    if (((yi>p[1])!==(yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) inside=!inside;
-
-  }
-
-  return inside;
-
-}
-
-function hitTest(p){
-
-  const list=hatches.filter(h=>h.floor===floor);
-
-  for(let i=list.length-1;i>=0;i--){ if(pointInPoly(p,list[i].pts)) return list[i]; }
-
-  return null;
-
-}
-
-function vertexIndex(h,p,thr){
-
-  for(let i=0;i<h.pts.length;i++){
-
-    if (Math.hypot(h.pts[i][0]-p[0], h.pts[i][1]-p[1]) <= thr) return i;
-
-  }
-
-  return -1;
-
-}
-
-
-
-/* ---------- поиск ---------- */
-
-function renderResults(q){
-
-  const res=$("sres");
-
-  if(!q){ res.hidden=true; res.innerHTML=""; return; }
-
-  const ql=q.toLowerCase(); const out=[]; const seen=new Set();
-
-  ROOMS.forEach(r=>{
-
-    const byNum=r.num.includes(ql), byName=(r.name||"").toLowerCase().includes(ql);
-
-    if(!byNum && !byName) return;
-
-    const key="r"+r.num; if(seen.has(key)) return; seen.add(key);
-
-    out.push({kind:"room",floor:r.floor,num:r.num,name:r.name,area:r.area,order:byNum?0:1});
-
-  });
-
-  if(IDX) IDX.floors.forEach(F=>F.words.forEach(w=>{
-
-    if(!w.t.toLowerCase().includes(ql)) return;
-
-    const key="w"+F.floor+w.t; if(seen.has(key)) return; seen.add(key);
-
-    out.push({kind:"word",floor:F.floor,word:w.t,x:w.x,y:w.y,w:w.w,h:w.h,order:2});
-
-  }));
-
-  out.sort((a,b)=>a.order-b.order||(a.floor||0)-(b.floor||0));
-
-  const top=out.slice(0,40);
-
-  res.hidden=false;
-
-  if(!top.length){ res.innerHTML='<div class="sempty">Ничего не найдено. Попробуйте номер (537) или название (Гостиная).</div>'; return; }
-
-  res.innerHTML=top.map(x=> x.kind==="room"
-
-    ? '<div class="sitem" data-kind="room" data-floor="'+x.floor+'" data-num="'+esc(x.num)+'"><span class="sfl">'+x.floor+' эт.</span><span class="sname">'+esc(x.num)+' · '+esc(x.name)+'</span><span class="ssub">'+(x.area!=null?x.area.toFixed(2)+' м²':'')+'</span></div>'
-
-    : '<div class="sitem" data-kind="word" data-floor="'+x.floor+'" data-x="'+x.x+'" data-y="'+x.y+'" data-w="'+x.w+'" data-h="'+x.h+'"><span class="sfl">'+x.floor+' эт.</span><span class="sname">'+esc(x.word)+'</span><span class="ssub">на плане</span></div>'
-
-  ).join("");
-
-}
-
-function roomCoords(num,fl){ if(!IDX) return null; const F=IDX.floors.find(x=>x.floor===fl); if(!F) return null; const hits=F.words.filter(w=>w.t===num); return hits.length?hits[0]:null; }
-
-function pickResult(ev){
-
-  const it=ev.target.closest(".sitem"); if(!it) return;
-
-  const fl=+it.dataset.floor;
-
-  if(it.dataset.kind==="room"){ const c=roomCoords(it.dataset.num,fl); HL=c?{x:c.x,y:c.y,w:c.w,h:c.h}:null; }
-
-  else HL={x:+it.dataset.x,y:+it.dataset.y,w:+it.dataset.w,h:+it.dataset.h};
-
-  showFloor(fl,true); $("sres").hidden=true;
-
-}
-
-
-
-/* ---------- масштаб / этажи ---------- */
-
-function setZoomP(z){
-
-  zoomP=Math.min(4,Math.max(1,z));
-
-  $("pstage").style.width=(zoomP*100)+"%";
-
-}
-
-function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
-
-function toPage(ev){
-
-  const c=$("pcanvas"), r=c.getBoundingClientRect();
-
-  if(!IDX) return null;
-
-  const fl=IDX.floors.find(f=>f.floor===floor); if(!fl) return null;
-
-  const x=clamp((ev.clientX-r.left)/r.width,0,1)*fl.w;
-
-  const y=clamp((ev.clientY-r.top)/r.height,0,1)*fl.h;
-
-  return [x,y];
-
-}
-
-function updateButtons(){
-  $("finish").disabled = !editing || pts.length<3;
-  $("undoPoint").disabled = !editing || !pts.length;
-  $("deleteSel").disabled = !editing || !selectedId;
-}
-
-function showFloor(f, keepHL){
-
-  floor=f; pts=[]; cursor=null; selectedId=null; drag=null; down=null;
-
-  if(!keepHL) HL=null;
-
-  document.querySelectorAll("#floors .tab").forEach(b=>b.classList.toggle("on",+b.dataset.f===f));
-
-  updateButtons();
-
-  renderPdf("mini/plans/floor-"+f+".pdf", ()=>{ setZoomP(HL?2:1); drawSearchHighlight(); });
-
-}
-
-
-
-/* ---------- PDF ---------- */
-
-async function renderPdf(url,done){
-
-  const canvas=$("pcanvas"); const my=++token;
-
-  const finish=()=>{ syncOverlay(); drawOverlay(); if(done) done(); };
-
-  try{
-
-    const doc=await pdfjsLib.getDocument(url).promise;
-
-    const page=await doc.getPage(1);
-
-    const wrap=canvas.parentElement;
-
-    const maxW=Math.max(320,wrap.clientWidth||900);
-
-    const vp0=page.getViewport({scale:1});
-
-    let targetW=Math.max(4800,maxW*2);
-
-    let scale=targetW/vp0.width;
-
-    const maxPix=32e6;
-
-    if(vp0.width*scale*vp0.height*scale>maxPix) scale=Math.sqrt(maxPix/(vp0.width*vp0.height));
-
-    const vp=page.getViewport({scale});
-
-    if(my!==token) return;
-
-    canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
-
-    await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
-
-    if(my!==token) return;
-
-    finish();
-
-  }catch(e){
-
-    console.warn("render failed",url,e);
-
-    try{
-
-      const doc=await pdfjsLib.getDocument(url).promise;
-
-      const page=await doc.getPage(1);
-
-      const vp0=page.getViewport({scale:1});
-
-      const sc=Math.sqrt(8e6/(vp0.width*vp0.height));
-
-      const vp=page.getViewport({scale:sc});
-
-      canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
-
-      await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
-
-      finish();
-
-    }catch(e2){ console.warn("retry failed",e2); }
-
-  }
-
-}
-
-
-
-/* ---------- палитра ---------- */
-
-function setEditing(on){
-  editing=!!on;
-  const panel=$("editPanel"), hint=$("viewHint"), b=$("editBtn");
-  if(panel) panel.hidden=!editing;
-  if(hint) hint.hidden=editing;
-  if(b){ b.textContent=editing?"✓ Готово":"✎ Редактировать"; b.classList.toggle("on",editing); }
-  if(!editing){ pts=[]; cursor=null; selectedId=null; drag=null; down=null; drawOverlay(); }
-  updateButtons();
-}
-function renderLegend(){
-
-  $("legend").innerHTML=WORK_TYPES.map(t=>
-
-    '<button type="button" class="chip'+(t.id===selectedType?' on':'')+'" data-id="'+t.id+'">'+
-
-    '<span class="sw" style="background:repeating-linear-gradient(45deg,'+t.color+' 0 3px,#fff 3px 7px)"></span>'+
-
-    esc(t.label)+'</button>'
-
-  ).join("");
-
-  document.querySelectorAll("#legend .chip").forEach(b=>{
-
-    b.onclick=()=>{
-
-      selectedType=b.dataset.id;
-
-      if(selectedId){
-
-        const h=hatches.find(x=>x.id===selectedId);
-
-        if(h){ h.type=selectedType; saveSoon(); }
-
-      }
-
-      renderLegend(); drawOverlay();
-
-    };
-
-  });
-
-}
-
-
-
-function savePng(){
-
-  const c=$("pcanvas"), o=$("poverlay");
-
-  if(!c.width) return;
-
-  const t=document.createElement("canvas"); t.width=c.width; t.height=c.height;
-
-  const g=t.getContext("2d");
-
-  g.fillStyle="#fff"; g.fillRect(0,0,t.width,t.height);
-
-  g.drawImage(c,0,0); g.drawImage(o,0,0);
-
-  const a=document.createElement("a");
-
-  a.download="план-"+floor+"-этаж-штриховка.png";
-
-  a.href=t.toDataURL("image/png");
-
-  a.click();
-
-}
-
-
-
-/* ---------- запуск ---------- */
-
-document.addEventListener("DOMContentLoaded", async ()=>{
-
-  pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdf.worker.min.js";
-
-  try{
-
-    const [a,b]=await Promise.all([fetch("schemes.json").then(r=>r.json()),fetch("rooms.json").then(r=>r.json())]);
-
-    IDX=a; ROOMS=b.rooms||b||[];
-
-  }catch(e){ console.warn("index load failed",e); }
-
-  renderLegend();
-  $("editBtn").onclick=()=>setEditing(!editing);
-  setEditing(false);
-
-  const srv=await serverLoad();
-
-  if(srv && Array.isArray(srv.hatches)){
-
-    hatches=srv.hatches; lastServerTs=srv.updatedAt||0;
-
-    setStatus("загружено с сервера","ok");
-
-  }else{
-
-    try{
-
-      const raw=localStorage.getItem(LS_KEY);
-
-      if(raw){ const j=JSON.parse(raw); hatches=Array.isArray(j.hatches)?j.hatches:[]; }
-
-    }catch(e){}
-
-    setStatus(srv===null?"сервер недоступен — локально":"на сервере пока пусто");
-
-    if(hatches.length) saveSoon();
-
-  }
-
-
-
-  $("q").addEventListener("input",e=>renderResults(e.target.value.trim()));
-
-  $("qclear").onclick=()=>{ $("q").value=""; renderResults(""); };
-
-  $("sres").addEventListener("click",pickResult);
-
-
-
-  $("pcanvas").addEventListener("pointerdown", ev=>{
-    if(!editing) return;
-
-    if(!IDX) return;
-
-    down={x:ev.clientX,y:ev.clientY}; moved=false;
-
-    const p=toPage(ev); if(!p) return;
-
-    const sel=hatches.find(h=>h.id===selectedId && h.floor===floor);
-
-    const fl=IDX.floors.find(f=>f.floor===floor);
-
-    const thr=fl?fl.w*0.012:10;
-
-    if(sel){
-
-      const vi=vertexIndex(sel,p,thr);
-
-      if(vi>=0){ drag={mode:"vertex",id:sel.id,idx:vi,start:p,orig:sel.pts.map(q=>[q[0],q[1]])}; return; }
-
-    }
-
-    const h=hitTest(p);
-
-    if(h){
-
-      selectedId=h.id;
-
-      drag={mode:"move",id:h.id,start:p,orig:h.pts.map(q=>[q[0],q[1]])};
-
-      updateButtons(); drawOverlay();
-
-    }
-
-  });
-
-  $("pcanvas").addEventListener("pointermove", ev=>{
-    if(!editing) return;
-
-    if(down && Math.hypot(ev.clientX-down.x, ev.clientY-down.y)>6) moved=true;
-
-    if(drag){
-
-      const p=toPage(ev); if(!p) return;
-
-      const h=hatches.find(x=>x.id===drag.id); if(!h) return;
-
-      if(drag.mode==="move"){
-
-        const dx=p[0]-drag.start[0], dy=p[1]-drag.start[1];
-
-        h.pts=drag.orig.map(q=>[q[0]+dx,q[1]+dy]);
-
-      }else{
-
-        h.pts=drag.orig.map((q,i)=> i===drag.idx?[p[0],p[1]]:[q[0],q[1]]);
-
-      }
-
-      drawOverlay();
-
-      return;
-
-    }
-
-    if(pts.length){ const p=toPage(ev); if(p){ cursor=p; drawOverlay(); } }
-
-  });
-
-  $("pcanvas").addEventListener("pointerup", ev=>{
-    if(!editing) return;
-
-    if(drag){
-
-      drag=null; down=null; saveSoon(); updateButtons(); drawOverlay(); return;
-
-    }
-
-    if(!down) return;
-
-    const wasMoved=moved; down=null;
-
-    if(wasMoved) return;
-
-    const p=toPage(ev); if(!p) return;
-
-    const h=hitTest(p);
-
-    if(h){ selectedId=h.id; updateButtons(); drawOverlay(); return; }
-
-    selectedId=null;
-
-    pts.push(p); cursor=p; updateButtons(); drawOverlay();
-
-  });
-
-
-
-  $("finish").onclick=()=>{
-
-    if(pts.length<3) return;
-
-    const h={id:uid(), floor:floor, type:selectedType, pts:pts.map(p=>[+p[0].toFixed(1),+p[1].toFixed(1)])};
-
-    hatches.push(h); selectedId=h.id; pts=[]; cursor=null;
-
-    updateButtons(); saveSoon(); drawOverlay();
-
-  };
-
-  $("undoPoint").onclick=()=>{ pts.pop(); updateButtons(); drawOverlay(); };
-
-  $("deleteSel").onclick=()=>{
-
-    if(!selectedId) return;
-
-    hatches=hatches.filter(h=>h.id!==selectedId);
-
-    selectedId=null; updateButtons(); saveSoon(); drawOverlay();
-
-  };
-
-  $("clear").onclick=()=>{
-
-    if(!hatches.some(h=>h.floor===floor)) return;
-
-    if(!confirm("Убрать всю штриховку на "+floor+" этаже?")) return;
-
-    hatches=hatches.filter(h=>h.floor!==floor);
-
-    selectedId=null; updateButtons(); saveSoon(); drawOverlay();
-
-  };
-
-  $("save").onclick=savePng;
-
-  $("refresh").onclick=async()=>{
-
-    setStatus("обновление…");
-
-    const s=await serverLoad();
-
-    if(s){ hatches=s.hatches; lastServerTs=s.updatedAt||0; selectedId=null; drawOverlay(); setStatus("обновлено","ok"); }
-
-    else setStatus("сервер недоступен","err");
-
-  };
-
-  document.addEventListener("keydown", e=>{
-
-    if((e.key==="Delete"||e.key==="Backspace") && editing && selectedId && document.activeElement.tagName!=="INPUT"){
-
-      e.preventDefault(); $("deleteSel").click();
-
-    }
-
-  });
-
-
-
-  $("pzin").onclick=()=>setZoomP(zoomP*1.25);
-
-  $("pzout").onclick=()=>setZoomP(zoomP/1.25);
-
-  $("pzfit").onclick=()=>setZoomP(1);
-
-  document.querySelectorAll("#floors .tab").forEach(b=>b.onclick=()=>showFloor(+b.dataset.f,false));
-
-
-
-  pollTimer=setInterval(pollServer,20000);
-
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) pollServer(); });
-
-  window.addEventListener("focus",pollServer);
-
-
-
-  showFloor(5,false);
-
-});
-
-</script>
-
-</body>
-
-</html>
-
+<!DOCTYPE html>
+
+<html lang="ru">
+
+<head>
+
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5">
+
+<title>Общие планы полов 1–5 этажей — поиск, штриховка, редактирование</title>
+
+<style>
+
+  :root{--bg:#f5f6f8;--panel:#fff;--line:#d9dee5;--ink:#1d2733;--mut:#5b6b7c;--acc:#1f4e79;--acc2:#2d6da3}
+
+  *{box-sizing:border-box}
+
+  body{margin:0;font:14px/1.45 -apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+
+  header{background:var(--acc);color:#fff;padding:16px 22px}
+
+  header h1{margin:0;font-size:19px;font-weight:600}
+
+  header p{margin:6px 0 0;color:#cfe0ef;font-size:13px}
+
+  header a{color:#fff}
+
+  .wrap{padding:14px 18px 40px}
+
+  .sbar{display:flex;gap:8px;margin-bottom:10px}
+
+  .sbar input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff}
+
+  .sbar input:focus{outline:2px solid #bcd7ee;border-color:var(--acc2)}
+
+  .sbar button{padding:0 14px;border:1px solid var(--line);background:#fff;border-radius:9px;cursor:pointer;font-size:16px;color:var(--mut)}
+
+  .sres{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;max-height:300px;overflow:auto}
+
+  .sres[hidden]{display:none}
+
+  .sitem{display:flex;gap:10px;align-items:baseline;padding:8px 12px;border-bottom:1px solid var(--line);cursor:pointer}
+
+  .sitem:last-child{border-bottom:0}
+
+  .sitem:hover{background:#eef5fc}
+
+  .sfl{flex:0 0 auto;font-size:11px;background:var(--acc2);color:#fff;border-radius:5px;padding:1px 6px}
+
+  .sname{font-weight:600}
+
+  .ssub{color:var(--mut);font-size:12px;margin-left:auto;text-align:right}
+
+  .sempty{padding:12px;color:var(--mut);font-size:13px}
+
+
+
+  .tools{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+
+  .tools h3{margin:0 0 8px;font-size:13px;color:var(--acc);font-weight:600}
+
+  .legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+
+  .chip{display:flex;align-items:center;gap:6px;border:2px solid var(--line);background:#fff;border-radius:8px;padding:5px 9px;cursor:pointer;font-size:12.5px}
+
+  .chip.on{border-color:var(--acc);box-shadow:0 0 0 2px #bcd7ee inset}
+
+  .sw{width:22px;height:14px;border:1px solid rgba(0,0,0,.25);border-radius:3px;flex:0 0 auto}
+
+  .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+
+  .acts button{border:1px solid var(--line);background:#fff;border-radius:7px;padding:6px 11px;cursor:pointer;font-size:12.5px;color:var(--ink)}
+
+  .acts button:hover{background:#eef5fc}
+
+  .acts button:disabled{opacity:.45;cursor:default}
+
+  .acts .danger{color:#a03030}
+
+  .srv{margin-left:auto;font-size:12px;color:var(--mut);white-space:nowrap}
+
+  .srv.ok{color:#1e7a3c}
+
+  .srv.err{color:#b03030}
+
+  .thint{color:var(--mut);font-size:12px;margin-top:8px}
+
+
+
+  .tabs{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+
+  .tab{padding:8px 14px;border:1px solid var(--line);background:var(--panel);border-radius:8px;cursor:pointer;font-size:13px}
+
+  .tab.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
+
+  .zoom{display:flex;gap:4px;align-items:center;margin-left:auto}
+
+  .zoom button{border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:13px;padding:4px 9px;color:var(--acc2)}
+
+  .zoom button:hover{background:#eef4fa}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+
+  .pwrap{max-height:74vh;overflow:auto;background:#fff}
+
+  .pstage{position:relative;line-height:0;width:100%}
+
+  #pcanvas{display:block;width:100%;height:auto}
+
+  #poverlay{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+
+  .hint{color:var(--mut);font-size:12px;margin:8px 0 0}
+
+  footer{padding:12px 18px;color:var(--mut);font-size:11.5px}
+
+#editBtn.on{background:var(--acc2);border-color:var(--acc2);color:#fff}
+#editPanel[hidden]{display:none}
+#editPanel{margin-top:10px}
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+  <h1>Общие планы полов — 1–5 этажи</h1>
+
+  <p>Проект «Полы.pdf» (От Андрея Ильина) · поиск, штриховка и редактирование · <a href="index.html">← к ведомости</a></p>
+
+</header>
+
+<div class="wrap">
+
+  <div class="sbar">
+
+    <input id="q" type="search" placeholder="Поиск по планам: номер помещения (537), название (Гостиная, Буфет)…" autocomplete="off">
+
+    <button id="qclear" type="button" title="Очистить">×</button>
+
+  </div>
+
+  <div class="sres" id="sres" hidden></div>
+
+
+
+  <div class="tools">
+    <div class="acts">
+      <button id="editBtn" type="button">✎ Редактировать</button>
+      <button id="refresh" type="button" title="Обновить с сервера">Обновить</button>
+      <span class="srv" id="srv">синхронизация…</span>
+    </div>
+    <div id="editPanel" hidden>
+      <h3>Примечание — виды работ (нажмите, чтобы выбрать цвет штриховки)</h3>
+      <div class="legend" id="legend"></div>
+      <div class="acts">
+        <button id="finish" type="button" disabled>Завершить область</button>
+        <button id="undoPoint" type="button" disabled>Убрать точку</button>
+        <button id="deleteSel" type="button" disabled>Удалить область</button>
+        <button id="clear" type="button" class="danger">Очистить этаж</button>
+        <button id="save" type="button">Скачать PNG</button>
+      </div>
+      <div class="thint" id="thint">Выберите вид работ и обведите помещение: клики по углам, «Завершить область». Чтобы изменить готовую область — нажмите на неё: её можно перетащить, потянуть за вершины, сменить вид работ или удалить.</div>
+    </div>
+    <div class="thint" id="viewHint">Просмотр: разметка видна всем. Чтобы менять штриховку, нажмите «Редактировать».</div>
+  </div>
+
+  <div class="tabs" id="floors">
+
+    <button class="tab" data-f="1" type="button">1 этаж</button>
+
+    <button class="tab" data-f="2" type="button">2 этаж</button>
+
+    <button class="tab" data-f="3" type="button">3 этаж</button>
+
+    <button class="tab" data-f="4" type="button">4 этаж</button>
+
+    <button class="tab on" data-f="5" type="button">5 этаж</button>
+
+    <div class="zoom">
+
+      <button id="pzout" type="button" title="Уменьшить">−</button>
+
+      <button id="pzfit" type="button">по ширине</button>
+
+      <button id="pzin" type="button" title="Увеличить">+</button>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="card"><div class="pwrap" id="pwrap"><div class="pstage" id="pstage"><canvas id="pcanvas"></canvas><canvas id="poverlay"></canvas></div></div></div>
+
+  <p class="hint">Разметка хранится на сервере и доступна с других устройств. Найденное поиском помещение обводится красным.</p>
+
+</div>
+
+<footer>Источник планов: «Полы.pdf» (проект От Андрея Ильина). Поиск: справочник помещений РД 1.1/1.3/1.4.</footer>
+
+
+
+<script src="vendor/pdf.min.js"></script>
+
+<script>
+
+const WORK_TYPES = [
+
+  {id:"antisept", label:"Антисептирование", color:"#b517ff"},
+
+  {id:"logs",     label:"Устройство лаг",   color:"#ff6a00"},
+
+  {id:"ply1",     label:"Фанера, 1-й слой", color:"#0077ff"},
+
+  {id:"ply2",     label:"Фанера, 2-й слой", color:"#00c9b7"},
+
+  {id:"parquet",  label:"Укладка паркета",  color:"#ff1f3d"},
+
+  {id:"sanding",  label:"Шлифовка",         color:"#ffd400"},
+
+  {id:"varnish",  label:"Лакировка",        color:"#00d95f"},
+
+  {id:"skirting", label:"Устройство плинтусов", color:"#78909c"}
+
+];
+
+const SERVER = "https://kvdb.io/YWo4XUH1PZw315FFv1HS7q/parquet_hatches_v1";
+
+const LS_KEY = "parquet_plan_hatches_v2";
+
+
+
+let IDX=null, ROOMS=[];
+
+let floor=5, zoomP=1, token=0;
+
+let HL=null;
+
+let hatches=[];
+
+let selectedType=WORK_TYPES[0].id;
+
+let selectedId=null;
+
+let pts=[], cursor=null;
+
+let drag=null, down=null, moved=false;
+
+let lastServerTs=0, saveTimer=null, pollTimer=null;
+
+let patternCache={};
+let editing=false;
+
+const $ = id=>document.getElementById(id);
+
+
+
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+function colorOf(id){ const t=WORK_TYPES.find(x=>x.id===id); return t?t.color:"#555"; }
+
+function uid(){ return "h"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+
+
+/* ---------- сервер ---------- */
+
+function setStatus(text, cls){ const el=$("srv"); el.textContent=text; el.className="srv"+(cls?" "+cls:""); }
+
+async function fetchRetry(url, opts, tries){
+
+  tries = tries || 3;
+
+  let last;
+
+  for(let i=0;i<tries;i++){
+
+    try{ return await fetch(url, opts); }
+
+    catch(e){ last=e; await new Promise(r=>setTimeout(r,500*(i+1))); }
+
+  }
+
+  throw last;
+
+}
+
+async function serverLoad(){
+
+  try{
+
+    const r = await fetchRetry(SERVER, {cache:"no-store"}, 3);
+
+    if (r.status===404) return {updatedAt:0, hatches:[]};
+
+    if (!r.ok) throw new Error("HTTP "+r.status);
+
+    const t = await r.text();
+
+    if (!t) return {updatedAt:0, hatches:[]};
+
+    const j = JSON.parse(t);
+
+    return {updatedAt: j.updatedAt||0, hatches: Array.isArray(j.hatches)?j.hatches:[]};
+
+  }catch(e){ console.warn("server load failed", e); return null; }
+
+}
+
+async function serverSave(){
+
+  const ts = Date.now(); lastServerTs = ts;
+
+  const body = JSON.stringify({updatedAt:ts, hatches:hatches});
+
+  try{
+
+    const r = await fetchRetry(SERVER, {method:"PUT", headers:{"Content-Type":"application/json"}, body:body}, 3);
+
+    if (!r.ok) throw new Error("HTTP "+r.status);
+
+    setStatus("сохранено на сервере", "ok");
+
+    try{ localStorage.setItem(LS_KEY, body); }catch(e){}
+
+  }catch(e){
+
+    console.warn("server save failed", e);
+
+    setStatus("сервер недоступен — сохранено локально", "err");
+
+    try{ localStorage.setItem(LS_KEY, body); }catch(e2){}
+
+  }
+
+}
+
+function saveSoon(){
+
+  setStatus("сохранение…");
+
+  clearTimeout(saveTimer);
+
+  saveTimer = setTimeout(serverSave, 500);
+
+}
+
+async function pollServer(){
+
+  if (document.hidden || drag || pts.length) return;
+
+  const srv = await serverLoad();
+
+  if (!srv) return;
+
+  if ((srv.updatedAt||0) > lastServerTs){
+
+    lastServerTs = srv.updatedAt;
+
+    hatches = srv.hatches;
+
+    selectedId = null;
+
+    drawOverlay();
+
+    setStatus("обновлено с другого устройства", "ok");
+
+  }
+
+}
+
+
+
+/* ---------- отрисовка ---------- */
+
+function makePattern(ctx,color){
+
+  if (patternCache[color]) return patternCache[color];
+
+  const c=document.createElement("canvas"); c.width=14; c.height=14;
+
+  const g=c.getContext("2d");
+
+  g.strokeStyle=color; g.lineWidth=2.4; g.lineCap="square";
+
+  g.beginPath();
+
+  g.moveTo(-3,14); g.lineTo(14,-3);
+
+  g.moveTo(4,17); g.lineTo(17,4);
+
+  g.moveTo(-10,7); g.lineTo(7,-10);
+
+  g.stroke();
+
+  const p=ctx.createPattern(c,"repeat"); patternCache[color]=p; return p;
+
+}
+
+function syncOverlay(){
+
+  const c=$("pcanvas"), o=$("poverlay");
+
+  if (c.width && o.width!==c.width){ o.width=c.width; o.height=c.height; }
+
+}
+
+function drawPoly(ctx, points, type, selected, preview){
+
+  if (!points.length) return;
+
+  ctx.save();
+
+  ctx.beginPath();
+
+  points.forEach((p,i)=> i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));
+
+  if (points.length>2) ctx.closePath();
+
+  if (points.length>2){
+
+    ctx.globalAlpha = preview?0.35:0.72;
+
+    ctx.fillStyle = makePattern(ctx,colorOf(type));
+
+    ctx.fill();
+
+  }
+
+  ctx.globalAlpha=1;
+
+  ctx.lineWidth = selected?2.2:1.8;
+
+  ctx.setLineDash(selected?[10,6]:[]);
+
+  ctx.strokeStyle = selected?"#111":colorOf(type);
+
+  ctx.stroke();
+
+  ctx.setLineDash([]);
+
+  if (selected){
+
+    ctx.fillStyle="#fff"; ctx.strokeStyle="#111"; ctx.lineWidth=1.4;
+
+    points.forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],4,0,Math.PI*2); ctx.fill(); ctx.stroke(); });
+
+  }
+
+  if (preview){
+
+    ctx.fillStyle=colorOf(type);
+
+    points.forEach(p=>{ ctx.beginPath(); ctx.arc(p[0],p[1],3,0,Math.PI*2); ctx.fill(); });
+
+  }
+
+  ctx.restore();
+
+}
+
+function drawOverlay(){
+
+  const o=$("poverlay");
+
+  if (!IDX || !o.width) return;
+
+  const fl=IDX.floors.find(f=>f.floor===floor);
+
+  if (!fl) return;
+
+  const ctx=o.getContext("2d");
+
+  ctx.clearRect(0,0,o.width,o.height);
+
+  const sc=o.width/fl.w;
+
+  ctx.save(); ctx.scale(sc,sc);
+
+  hatches.filter(h=>h.floor===floor).forEach(h=>drawPoly(ctx,h.pts,h.type,h.id===selectedId,false));
+
+  if (pts.length){
+
+    const preview = cursor ? pts.concat([[cursor[0],cursor[1]]]) : pts.slice();
+
+    drawPoly(ctx,preview,selectedType,false,true);
+
+  }
+
+  ctx.restore();
+
+}
+
+function drawSearchHighlight(){
+
+  if (!HL || !IDX) return;
+
+  const o=$("poverlay"), c=$("pcanvas");
+
+  const fl=IDX.floors.find(f=>f.floor===floor);
+
+  if (!fl || !o.width) return;
+
+  const ctx=o.getContext("2d"); const sc=o.width/fl.w;
+
+  const x=HL.x*sc,y=HL.y*sc,w=Math.max(HL.w*sc,sc*8),h=Math.max(HL.h*sc,sc*8);
+
+  ctx.save();
+
+  ctx.fillStyle="rgba(255,214,64,.35)"; ctx.strokeStyle="#e53935"; ctx.lineWidth=Math.max(3,sc*1.2);
+
+  ctx.fillRect(x,y,w,h); ctx.strokeRect(x,y,w,h);
+
+  ctx.restore();
+
+  const wrap=c.parentElement;
+
+  const cssX=x*(c.clientWidth/c.width), cssY=y*(c.clientHeight/c.height);
+
+  wrap.scrollTo({left:Math.max(0,cssX-wrap.clientWidth/2), top:Math.max(0,cssY-wrap.clientHeight/2), behavior:"smooth"});
+
+}
+
+
+
+/* ---------- геометрия ---------- */
+
+function pointInPoly(p, poly){
+
+  let inside=false;
+
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+
+    const xi=poly[i][0], yi=poly[i][1], xj=poly[j][0], yj=poly[j][1];
+
+    if (((yi>p[1])!==(yj>p[1])) && (p[0] < (xj-xi)*(p[1]-yi)/(yj-yi)+xi)) inside=!inside;
+
+  }
+
+  return inside;
+
+}
+
+function hitTest(p){
+
+  const list=hatches.filter(h=>h.floor===floor);
+
+  for(let i=list.length-1;i>=0;i--){ if(pointInPoly(p,list[i].pts)) return list[i]; }
+
+  return null;
+
+}
+
+function vertexIndex(h,p,thr){
+
+  for(let i=0;i<h.pts.length;i++){
+
+    if (Math.hypot(h.pts[i][0]-p[0], h.pts[i][1]-p[1]) <= thr) return i;
+
+  }
+
+  return -1;
+
+}
+
+
+
+/* ---------- поиск ---------- */
+
+function renderResults(q){
+
+  const res=$("sres");
+
+  if(!q){ res.hidden=true; res.innerHTML=""; return; }
+
+  const ql=q.toLowerCase(); const out=[]; const seen=new Set();
+
+  ROOMS.forEach(r=>{
+
+    const byNum=r.num.includes(ql), byName=(r.name||"").toLowerCase().includes(ql);
+
+    if(!byNum && !byName) return;
+
+    const key="r"+r.num; if(seen.has(key)) return; seen.add(key);
+
+    out.push({kind:"room",floor:r.floor,num:r.num,name:r.name,area:r.area,order:byNum?0:1});
+
+  });
+
+  if(IDX) IDX.floors.forEach(F=>F.words.forEach(w=>{
+
+    if(!w.t.toLowerCase().includes(ql)) return;
+
+    const key="w"+F.floor+w.t; if(seen.has(key)) return; seen.add(key);
+
+    out.push({kind:"word",floor:F.floor,word:w.t,x:w.x,y:w.y,w:w.w,h:w.h,order:2});
+
+  }));
+
+  out.sort((a,b)=>a.order-b.order||(a.floor||0)-(b.floor||0));
+
+  const top=out.slice(0,40);
+
+  res.hidden=false;
+
+  if(!top.length){ res.innerHTML='<div class="sempty">Ничего не найдено. Попробуйте номер (537) или название (Гостиная).</div>'; return; }
+
+  res.innerHTML=top.map(x=> x.kind==="room"
+
+    ? '<div class="sitem" data-kind="room" data-floor="'+x.floor+'" data-num="'+esc(x.num)+'"><span class="sfl">'+x.floor+' эт.</span><span class="sname">'+esc(x.num)+' · '+esc(x.name)+'</span><span class="ssub">'+(x.area!=null?x.area.toFixed(2)+' м²':'')+'</span></div>'
+
+    : '<div class="sitem" data-kind="word" data-floor="'+x.floor+'" data-x="'+x.x+'" data-y="'+x.y+'" data-w="'+x.w+'" data-h="'+x.h+'"><span class="sfl">'+x.floor+' эт.</span><span class="sname">'+esc(x.word)+'</span><span class="ssub">на плане</span></div>'
+
+  ).join("");
+
+}
+
+function roomCoords(num,fl){ if(!IDX) return null; const F=IDX.floors.find(x=>x.floor===fl); if(!F) return null; const hits=F.words.filter(w=>w.t===num); return hits.length?hits[0]:null; }
+
+function pickResult(ev){
+
+  const it=ev.target.closest(".sitem"); if(!it) return;
+
+  const fl=+it.dataset.floor;
+
+  if(it.dataset.kind==="room"){ const c=roomCoords(it.dataset.num,fl); HL=c?{x:c.x,y:c.y,w:c.w,h:c.h}:null; }
+
+  else HL={x:+it.dataset.x,y:+it.dataset.y,w:+it.dataset.w,h:+it.dataset.h};
+
+  showFloor(fl,true); $("sres").hidden=true;
+
+}
+
+
+
+/* ---------- масштаб / этажи ---------- */
+
+function setZoomP(z){
+
+  zoomP=Math.min(4,Math.max(1,z));
+
+  $("pstage").style.width=(zoomP*100)+"%";
+
+}
+
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+
+function toPage(ev){
+
+  const c=$("pcanvas"), r=c.getBoundingClientRect();
+
+  if(!IDX) return null;
+
+  const fl=IDX.floors.find(f=>f.floor===floor); if(!fl) return null;
+
+  const x=clamp((ev.clientX-r.left)/r.width,0,1)*fl.w;
+
+  const y=clamp((ev.clientY-r.top)/r.height,0,1)*fl.h;
+
+  return [x,y];
+
+}
+
+function updateButtons(){
+  $("finish").disabled = !editing || pts.length<3;
+  $("undoPoint").disabled = !editing || !pts.length;
+  $("deleteSel").disabled = !editing || !selectedId;
+}
+
+function showFloor(f, keepHL){
+
+  floor=f; pts=[]; cursor=null; selectedId=null; drag=null; down=null;
+
+  if(!keepHL) HL=null;
+
+  document.querySelectorAll("#floors .tab").forEach(b=>b.classList.toggle("on",+b.dataset.f===f));
+
+  updateButtons();
+
+  renderPdf("mini/plans/floor-"+f+".pdf", ()=>{ setZoomP(HL?2:1); drawSearchHighlight(); });
+
+}
+
+
+
+/* ---------- PDF ---------- */
+
+async function renderPdf(url,done){
+
+  const canvas=$("pcanvas"); const my=++token;
+
+  const finish=()=>{ syncOverlay(); drawOverlay(); if(done) done(); };
+
+  try{
+
+    const doc=await pdfjsLib.getDocument(url).promise;
+
+    const page=await doc.getPage(1);
+
+    const wrap=canvas.parentElement;
+
+    const maxW=Math.max(320,wrap.clientWidth||900);
+
+    const vp0=page.getViewport({scale:1});
+
+    let targetW=Math.max(4800,maxW*2);
+
+    let scale=targetW/vp0.width;
+
+    const maxPix=32e6;
+
+    if(vp0.width*scale*vp0.height*scale>maxPix) scale=Math.sqrt(maxPix/(vp0.width*vp0.height));
+
+    const vp=page.getViewport({scale});
+
+    if(my!==token) return;
+
+    canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
+
+    await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+
+    if(my!==token) return;
+
+    finish();
+
+  }catch(e){
+
+    console.warn("render failed",url,e);
+
+    try{
+
+      const doc=await pdfjsLib.getDocument(url).promise;
+
+      const page=await doc.getPage(1);
+
+      const vp0=page.getViewport({scale:1});
+
+      const sc=Math.sqrt(8e6/(vp0.width*vp0.height));
+
+      const vp=page.getViewport({scale:sc});
+
+      canvas.width=Math.floor(vp.width); canvas.height=Math.floor(vp.height);
+
+      await page.render({canvasContext:canvas.getContext("2d"),viewport:vp}).promise;
+
+      finish();
+
+    }catch(e2){ console.warn("retry failed",e2); }
+
+  }
+
+}
+
+
+
+/* ---------- палитра ---------- */
+
+function setEditing(on){
+  editing=!!on;
+  const panel=$("editPanel"), hint=$("viewHint"), b=$("editBtn");
+  if(panel) panel.hidden=!editing;
+  if(hint) hint.hidden=editing;
+  if(b){ b.textContent=editing?"✓ Готово":"✎ Редактировать"; b.classList.toggle("on",editing); }
+  if(!editing){ pts=[]; cursor=null; selectedId=null; drag=null; down=null; drawOverlay(); }
+  updateButtons();
+}
+function renderLegend(){
+
+  $("legend").innerHTML=WORK_TYPES.map(t=>
+
+    '<button type="button" class="chip'+(t.id===selectedType?' on':'')+'" data-id="'+t.id+'">'+
+
+    '<span class="sw" style="background:repeating-linear-gradient(45deg,'+t.color+' 0 3px,#fff 3px 7px)"></span>'+
+
+    esc(t.label)+'</button>'
+
+  ).join("");
+
+  document.querySelectorAll("#legend .chip").forEach(b=>{
+
+    b.onclick=()=>{
+
+      selectedType=b.dataset.id;
+
+      if(selectedId){
+
+        const h=hatches.find(x=>x.id===selectedId);
+
+        if(h){ h.type=selectedType; saveSoon(); }
+
+      }
+
+      renderLegend(); drawOverlay();
+
+    };
+
+  });
+
+}
+
+
+
+function savePng(){
+
+  const c=$("pcanvas"), o=$("poverlay");
+
+  if(!c.width) return;
+
+  const t=document.createElement("canvas"); t.width=c.width; t.height=c.height;
+
+  const g=t.getContext("2d");
+
+  g.fillStyle="#fff"; g.fillRect(0,0,t.width,t.height);
+
+  g.drawImage(c,0,0); g.drawImage(o,0,0);
+
+  const a=document.createElement("a");
+
+  a.download="план-"+floor+"-этаж-штриховка.png";
+
+  a.href=t.toDataURL("image/png");
+
+  a.click();
+
+}
+
+
+
+/* ---------- запуск ---------- */
+
+document.addEventListener("DOMContentLoaded", async ()=>{
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc="vendor/pdf.worker.min.js";
+
+  try{
+
+    const [a,b]=await Promise.all([fetch("schemes.json").then(r=>r.json()),fetch("rooms.json").then(r=>r.json())]);
+
+    IDX=a; ROOMS=b.rooms||b||[];
+
+  }catch(e){ console.warn("index load failed",e); }
+
+  renderLegend();
+  $("editBtn").onclick=()=>setEditing(!editing);
+  setEditing(false);
+
+  const srv=await serverLoad();
+
+  if(srv && Array.isArray(srv.hatches)){
+
+    hatches=srv.hatches; lastServerTs=srv.updatedAt||0;
+
+    setStatus("загружено с сервера","ok");
+
+  }else{
+
+    try{
+
+      const raw=localStorage.getItem(LS_KEY);
+
+      if(raw){ const j=JSON.parse(raw); hatches=Array.isArray(j.hatches)?j.hatches:[]; }
+
+    }catch(e){}
+
+    setStatus(srv===null?"сервер недоступен — локально":"на сервере пока пусто");
+
+    if(hatches.length) saveSoon();
+
+  }
+
+
+
+  $("q").addEventListener("input",e=>renderResults(e.target.value.trim()));
+
+  $("qclear").onclick=()=>{ $("q").value=""; renderResults(""); };
+
+  $("sres").addEventListener("click",pickResult);
+
+
+
+  $("pcanvas").addEventListener("pointerdown", ev=>{
+    if(!editing) return;
+
+    if(!IDX) return;
+
+    down={x:ev.clientX,y:ev.clientY}; moved=false;
+
+    const p=toPage(ev); if(!p) return;
+
+    const sel=hatches.find(h=>h.id===selectedId && h.floor===floor);
+
+    const fl=IDX.floors.find(f=>f.floor===floor);
+
+    const thr=fl?fl.w*0.012:10;
+
+    if(sel){
+
+      const vi=vertexIndex(sel,p,thr);
+
+      if(vi>=0){ drag={mode:"vertex",id:sel.id,idx:vi,start:p,orig:sel.pts.map(q=>[q[0],q[1]])}; return; }
+
+    }
+
+    const h=hitTest(p);
+
+    if(h){
+
+      selectedId=h.id;
+
+      drag={mode:"move",id:h.id,start:p,orig:h.pts.map(q=>[q[0],q[1]])};
+
+      updateButtons(); drawOverlay();
+
+    }
+
+  });
+
+  $("pcanvas").addEventListener("pointermove", ev=>{
+    if(!editing) return;
+
+    if(down && Math.hypot(ev.clientX-down.x, ev.clientY-down.y)>6) moved=true;
+
+    if(drag){
+
+      const p=toPage(ev); if(!p) return;
+
+      const h=hatches.find(x=>x.id===drag.id); if(!h) return;
+
+      if(drag.mode==="move"){
+
+        const dx=p[0]-drag.start[0], dy=p[1]-drag.start[1];
+
+        h.pts=drag.orig.map(q=>[q[0]+dx,q[1]+dy]);
+
+      }else{
+
+        h.pts=drag.orig.map((q,i)=> i===drag.idx?[p[0],p[1]]:[q[0],q[1]]);
+
+      }
+
+      drawOverlay();
+
+      return;
+
+    }
+
+    if(pts.length){ const p=toPage(ev); if(p){ cursor=p; drawOverlay(); } }
+
+  });
+
+  $("pcanvas").addEventListener("pointerup", ev=>{
+    if(!editing) return;
+
+    if(drag){
+
+      drag=null; down=null; saveSoon(); updateButtons(); drawOverlay(); return;
+
+    }
+
+    if(!down) return;
+
+    const wasMoved=moved; down=null;
+
+    if(wasMoved) return;
+
+    const p=toPage(ev); if(!p) return;
+
+    const h=hitTest(p);
+
+    if(h){ selectedId=h.id; updateButtons(); drawOverlay(); return; }
+
+    selectedId=null;
+
+    pts.push(p); cursor=p; updateButtons(); drawOverlay();
+
+  });
+
+
+
+  $("finish").onclick=()=>{
+
+    if(pts.length<3) return;
+
+    const h={id:uid(), floor:floor, type:selectedType, pts:pts.map(p=>[+p[0].toFixed(1),+p[1].toFixed(1)])};
+
+    hatches.push(h); selectedId=h.id; pts=[]; cursor=null;
+
+    updateButtons(); saveSoon(); drawOverlay();
+
+  };
+
+  $("undoPoint").onclick=()=>{ pts.pop(); updateButtons(); drawOverlay(); };
+
+  $("deleteSel").onclick=()=>{
+
+    if(!selectedId) return;
+
+    hatches=hatches.filter(h=>h.id!==selectedId);
+
+    selectedId=null; updateButtons(); saveSoon(); drawOverlay();
+
+  };
+
+  $("clear").onclick=()=>{
+
+    if(!hatches.some(h=>h.floor===floor)) return;
+
+    if(!confirm("Убрать всю штриховку на "+floor+" этаже?")) return;
+
+    hatches=hatches.filter(h=>h.floor!==floor);
+
+    selectedId=null; updateButtons(); saveSoon(); drawOverlay();
+
+  };
+
+  $("save").onclick=savePng;
+
+  $("refresh").onclick=async()=>{
+
+    setStatus("обновление…");
+
+    const s=await serverLoad();
+
+    if(s){ hatches=s.hatches; lastServerTs=s.updatedAt||0; selectedId=null; drawOverlay(); setStatus("обновлено","ok"); }
+
+    else setStatus("сервер недоступен","err");
+
+  };
+
+  document.addEventListener("keydown", e=>{
+
+    if((e.key==="Delete"||e.key==="Backspace") && editing && selectedId && document.activeElement.tagName!=="INPUT"){
+
+      e.preventDefault(); $("deleteSel").click();
+
+    }
+
+  });
+
+
+
+  $("pzin").onclick=()=>setZoomP(zoomP*1.25);
+
+  $("pzout").onclick=()=>setZoomP(zoomP/1.25);
+
+  $("pzfit").onclick=()=>setZoomP(1);
+
+  document.querySelectorAll("#floors .tab").forEach(b=>b.onclick=()=>showFloor(+b.dataset.f,false));
+
+
+
+  pollTimer=setInterval(pollServer,20000);
+
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden) pollServer(); });
+
+  window.addEventListener("focus",pollServer);
+
+
+
+  showFloor(5,false);
+
+});
+
+</script>
+
+</body>
+
+</html>
+
