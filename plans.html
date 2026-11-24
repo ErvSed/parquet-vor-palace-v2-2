@@ -1128,6 +1128,7 @@
 
 
 
+    <button id="exportPdf" type="button" class="tab" title="Экспорт всех планов со штриховкой в PDF">Экспорт PDF: все этажи</button>
     <div class="zoom">
 
 
@@ -1284,6 +1285,7 @@
 
 
 
+<script src="vendor/jspdf.umd.min.js"></script>
 <script src="vendor/pdf.min.js"></script>
 
 
@@ -5072,6 +5074,85 @@ function savePng(){
 
 
 
+
+let exportBusy=false;
+function exportFloorTitle(f){ return f===52 ? "5 этаж, захватка 2" : f+" этаж"; }
+function exportSwatch(ctx,x,y,w,h,color){
+  ctx.save(); ctx.fillStyle="#fff"; ctx.fillRect(x,y,w,h);
+  ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+  ctx.strokeStyle=color; ctx.lineWidth=4;
+  for(let i=-h;i<w+h;i+=12){ ctx.beginPath(); ctx.moveTo(x+i,y+h); ctx.lineTo(x+i+h,y); ctx.stroke(); }
+  ctx.restore(); ctx.strokeStyle="#999"; ctx.lineWidth=1; ctx.strokeRect(x,y,w,h);
+}
+async function exportRenderFloor(f){
+  const fl=IDX.floors.find(x=>x.floor===f);
+  const doc=await pdfjsLib.getDocument("mini/plans/floor-"+f+".pdf").promise;
+  const page=await doc.getPage(1);
+  const vp0=page.getViewport({scale:1});
+  const scale=2400/vp0.width;
+  const vp=page.getViewport({scale});
+  const c=document.createElement("canvas"); c.width=Math.floor(vp.width); c.height=Math.floor(vp.height);
+  await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  if(!fl) return c;
+  const o=document.createElement("canvas"); o.width=c.width; o.height=c.height;
+  const g=o.getContext("2d"); const sc=c.width/fl.w; const pats={};
+  const pat=color=>{
+    if(pats[color]) return pats[color];
+    const pc=document.createElement("canvas"); pc.width=14; pc.height=14;
+    const pg=pc.getContext("2d"); pg.strokeStyle=color; pg.lineWidth=2.4;
+    pg.beginPath(); pg.moveTo(-3,14); pg.lineTo(14,-3); pg.moveTo(4,17); pg.lineTo(17,4); pg.moveTo(-10,7); pg.lineTo(7,-10); pg.stroke();
+    const p=g.createPattern(pc,"repeat"); pats[color]=p; return p;
+  };
+  hatches.filter(h=>h.floor===f).forEach(h=>{
+    g.save(); g.beginPath();
+    h.pts.forEach((p,i)=> i?g.lineTo(p[0]*sc,p[1]*sc):g.moveTo(p[0]*sc,p[1]*sc));
+    g.closePath(); g.globalAlpha=0.72; g.fillStyle=pat(colorOf(h.type)); g.fill();
+    g.globalAlpha=1; g.lineWidth=Math.max(3,sc*0.9); g.strokeStyle=colorOf(h.type); g.stroke(); g.restore();
+  });
+  c.getContext("2d").drawImage(o,0,0);
+  return c;
+}
+async function exportAllPdf(){
+  if(exportBusy) return;
+  if(!window.jspdf || !window.jspdf.jsPDF){ alert("Библиотека PDF не загружена"); return; }
+  exportBusy=true;
+  const btn=$("exportPdf"), old=btn.textContent;
+  btn.disabled=true; btn.textContent="Формирование PDF…";
+  try{
+    const { jsPDF } = window.jspdf;
+    const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
+    const W=2970,H=2100;
+    const now=new Date(), dmy=now.toLocaleDateString("ru-RU");
+    const iso=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
+    const c=document.createElement("canvas"); c.width=W; c.height=H;
+    const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,W,H);
+    g.fillStyle="#1f4e79"; g.font="bold 88px Arial"; g.fillText("Планы полов со слоями выполненных работ",120,300);
+    g.fillStyle="#333"; g.font="48px Arial";
+    g.fillText("Объект: г. Санкт-Петербург, пл. Труда, д. 4, лит. В, «Дворец»",120,420);
+    g.fillText("Дата выгрузки: "+dmy,120,500);
+    g.font="bold 48px Arial"; g.fillText("Виды работ:",120,640);
+    let y=720;
+    WORK_TYPES.forEach(t=>{ exportSwatch(g,120,y-38,70,50,t.color); g.font="40px Arial"; g.fillStyle="#222"; g.fillText(t.label,220,y); y+=70; });
+    doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,297,210);
+    const floors=[1,2,3,4,5,52].filter(f=>IDX.floors.some(x=>x.floor===f));
+    for(const f of floors){
+      btn.textContent="Формирование PDF… ("+exportFloorTitle(f)+")";
+      const plan=await exportRenderFloor(f);
+      const pc=document.createElement("canvas"); pc.width=W; pc.height=H;
+      const pg=pc.getContext("2d"); pg.fillStyle="#fff"; pg.fillRect(0,0,W,H);
+      pg.fillStyle="#1f4e79"; pg.font="bold 58px Arial"; pg.fillText("План полов — "+exportFloorTitle(f),110,100);
+      pg.fillStyle="#666"; pg.font="32px Arial"; pg.fillText("Дата выгрузки: "+dmy,110,150);
+      const aw=W-220, ah=H-320;
+      const sc=Math.min(aw/plan.width, ah/plan.height);
+      pg.drawImage(plan,(W-plan.width*sc)/2,210,plan.width*sc,plan.height*sc);
+      pg.fillStyle="#666"; pg.font="24px Arial"; pg.fillText("Дата выгрузки: "+dmy,110,H-40);
+      doc.addPage(); doc.addImage(pc.toDataURL("image/jpeg",0.9),"JPEG",0,0,297,210);
+    }
+    doc.save("Планы_со_штриховкой_"+iso+".pdf");
+  }catch(e){ console.error(e); alert("Не удалось сформировать PDF: "+e); }
+  finally{ exportBusy=false; btn.disabled=false; btn.textContent=old; }
+}
+
 document.addEventListener("DOMContentLoaded", async ()=>{
 
 
@@ -6488,6 +6569,7 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
 
 
+  $("exportPdf").onclick=exportAllPdf;
   showFloor(5,false);
 
 
