@@ -768,6 +768,9 @@
   .nearfinish{position:absolute;z-index:12;background:var(--acc2);color:#fff;border:0;border-radius:999px;padding:10px 16px;font-size:14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.28);cursor:pointer}
   .nearfinish[hidden]{display:none}
   .nearfinish:active{transform:scale(.97)}
+
+  .navbtn{display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1f4e79 !important;padding:8px 14px;border-radius:8px;font-weight:600;text-decoration:none;border:1px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.18);font-size:13px}
+  .navbtn:hover{background:#eaf2fa}
 </style>
 
 
@@ -828,7 +831,7 @@
 
 
 
-  <p>Проект «Полы.pdf» (От Андрея Ильина) · поиск, штриховка и редактирование · <a href="index.html">← к ведомости</a></p>
+  <p>Проект «Полы.pdf» (От Андрея Ильина) · поиск, штриховка и редактирование · <a class="navbtn" href="index.html">← К ведомости</a></p>
 
 
 
@@ -3165,7 +3168,7 @@ function drawSearchHighlight(){
 
 
 
-  const wrap=c.parentElement;
+  const wrap=c.closest(".pwrap")||c.parentElement;
 
 
 
@@ -3189,7 +3192,7 @@ function drawSearchHighlight(){
 
 
 
-  wrap.scrollTo({left:Math.max(0,cssX-wrap.clientWidth/2), top:Math.max(0,cssY-wrap.clientHeight/2), behavior:"smooth"});
+  requestAnimationFrame(()=>{ const l=Math.max(0,cssX-wrap.clientWidth/2), t=Math.max(0,cssY-wrap.clientHeight/2); wrap.scrollTo({left:l, top:t, behavior:"smooth"}); });
 
 
 
@@ -3899,42 +3902,15 @@ function pickResult(ev){
 
 
 function setZoomP(z){
-
-
-
-
-
-
-
-
-
-
-
   zoomP=Math.min(4,Math.max(1,z));
-
-
-
-
-
-
-
-
-
-
-
   $("pstage").style.width=(zoomP*100)+"%";
   updateNearFinish();
-
-
-
-
-
-
-
-
-
-
-
+  const wrap=$("pwrap");
+  if(wrap) requestAnimationFrame(()=>{
+    if(zoomP===1){ wrap.scrollLeft=0; wrap.scrollTop=0; }
+    wrap.scrollLeft=Math.min(wrap.scrollLeft, Math.max(0, wrap.scrollWidth-wrap.clientWidth));
+    wrap.scrollTop=Math.min(wrap.scrollTop, Math.max(0, wrap.scrollHeight-wrap.clientHeight));
+  });
 }
 
 
@@ -4167,7 +4143,7 @@ function showFloor(f, keepHL){
 
 
 
-  renderPdf("mini/plans/floor-"+f+".pdf", ()=>{ setZoomP(HL?2:1); drawSearchHighlight(); });
+  renderPdf("mini/plans/floor-"+f+".pdf", ()=>{ setZoomP(HL?2:1); requestAnimationFrame(()=>drawSearchHighlight()); });
 
 
 
