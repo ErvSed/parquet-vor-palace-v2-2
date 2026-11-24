@@ -1116,7 +1116,6 @@
 
 
     <button class="tab on" data-f="5" type="button">5 этаж</button>
-    <button class="tab" data-f="52" type="button">5 эт. захв. 2</button>
 
 
 
@@ -5089,7 +5088,7 @@ async function exportRenderFloor(f){
   const doc=await pdfjsLib.getDocument("mini/plans/floor-"+f+".pdf").promise;
   const page=await doc.getPage(1);
   const vp0=page.getViewport({scale:1});
-  const scale=2400/vp0.width;
+  const scale=7200/vp0.width;
   const vp=page.getViewport({scale});
   const c=document.createElement("canvas"); c.width=Math.floor(vp.width); c.height=Math.floor(vp.height);
   await page.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
@@ -5121,11 +5120,11 @@ async function exportAllPdf(){
   try{
     const { jsPDF } = window.jspdf;
     const doc=new jsPDF({orientation:"landscape",unit:"mm",format:"a4"});
-    const W=2970,H=2100;
+    const S=3, W=2970, H=2100;
     const now=new Date(), dmy=now.toLocaleDateString("ru-RU");
     const iso=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(now.getDate()).padStart(2,"0");
-    const c=document.createElement("canvas"); c.width=W; c.height=H;
-    const g=c.getContext("2d"); g.fillStyle="#fff"; g.fillRect(0,0,W,H);
+    const c=document.createElement("canvas"); c.width=W*S; c.height=H*S;
+    const g=c.getContext("2d"); g.scale(S,S); g.fillStyle="#fff"; g.fillRect(0,0,W,H);
     g.fillStyle="#1f4e79"; g.font="bold 88px Arial"; g.fillText("Планы полов со слоями выполненных работ",120,300);
     g.fillStyle="#333"; g.font="48px Arial";
     g.fillText("Объект: г. Санкт-Петербург, пл. Труда, д. 4, лит. В, «Дворец»",120,420);
@@ -5133,20 +5132,20 @@ async function exportAllPdf(){
     g.font="bold 48px Arial"; g.fillText("Виды работ:",120,640);
     let y=720;
     WORK_TYPES.forEach(t=>{ exportSwatch(g,120,y-38,70,50,t.color); g.font="40px Arial"; g.fillStyle="#222"; g.fillText(t.label,220,y); y+=70; });
-    doc.addImage(c.toDataURL("image/jpeg",0.9),"JPEG",0,0,297,210);
-    const floors=[1,2,3,4,5,52].filter(f=>IDX.floors.some(x=>x.floor===f));
+    doc.addImage(c.toDataURL("image/jpeg",0.92),"JPEG",0,0,297,210);
+    const floors=[1,2,3,4,5].filter(f=>IDX.floors.some(x=>x.floor===f));
     for(const f of floors){
       btn.textContent="Формирование PDF… ("+exportFloorTitle(f)+")";
       const plan=await exportRenderFloor(f);
-      const pc=document.createElement("canvas"); pc.width=W; pc.height=H;
-      const pg=pc.getContext("2d"); pg.fillStyle="#fff"; pg.fillRect(0,0,W,H);
+      const pc=document.createElement("canvas"); pc.width=W*S; pc.height=H*S;
+      const pg=pc.getContext("2d"); pg.scale(S,S); pg.fillStyle="#fff"; pg.fillRect(0,0,W,H);
       pg.fillStyle="#1f4e79"; pg.font="bold 58px Arial"; pg.fillText("План полов — "+exportFloorTitle(f),110,100);
       pg.fillStyle="#666"; pg.font="32px Arial"; pg.fillText("Дата выгрузки: "+dmy,110,150);
       const aw=W-220, ah=H-320;
       const sc=Math.min(aw/plan.width, ah/plan.height);
       pg.drawImage(plan,(W-plan.width*sc)/2,210,plan.width*sc,plan.height*sc);
       pg.fillStyle="#666"; pg.font="24px Arial"; pg.fillText("Дата выгрузки: "+dmy,110,H-40);
-      doc.addPage(); doc.addImage(pc.toDataURL("image/jpeg",0.9),"JPEG",0,0,297,210);
+      doc.addPage(); doc.addImage(pc.toDataURL("image/jpeg",0.92),"JPEG",0,0,297,210);
     }
     doc.save("Планы_со_штриховкой_"+iso+".pdf");
   }catch(e){ console.error(e); alert("Не удалось сформировать PDF: "+e); }
